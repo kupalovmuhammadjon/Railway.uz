@@ -41,13 +41,16 @@ class MainWindow(QMainWindow):
         self.setMaximumSize(pixmap.width(), pixmap.height())
         print(pixmap.width(), pixmap.height())
         
-        backforth = QRadioButton(self.label)
-        backforth.move(25, 700)
-        backforth.setStyleSheet("background-color: transparent;")
-        
-        forth = QRadioButton(self.label)
-        forth.move(25, 743)
-        forth.setStyleSheet("background-color: transparent;")
+        self.backforth = QRadioButton(self.label)
+        self.backforth.move(25, 700)
+        self.backforth.setStyleSheet("background-color: transparent;")
+        self.backforth.setChecked(True)
+        self.backforth.toggled.connect(self.forthback)
+
+        self.forth = QRadioButton(self.label)
+        self.forth.move(25, 743)
+        self.forth.setStyleSheet("background-color: transparent;")
+        self.forth.toggled.connect(self.forth)
         
         cur_location = QComboBox(self)
         cur_location.setGeometry(251, 695, 290, 76)
@@ -75,7 +78,13 @@ class MainWindow(QMainWindow):
         findTickets.setFont(QFont("Montserrat", 12))
         
         
-
+    def forth(self):
+        self.comingdate.setPlaceholderText("")
+        self.comingdate.setEnabled(False)
+    
+    def forthback(self):
+        self.comingdate.setPlaceholderText("Coming date (2024-10-24)")
+        self.comingdate.setEnabled(True)
         
     
     
@@ -86,8 +95,8 @@ class MainWindow(QMainWindow):
         self.name = data[0][0]
         self.surname = data[0][1]
     
-    def isBooksEmpty(self):
-        cursor.execute("select * from books")
+    def isTrainsEmpty(self):
+        cursor.execute("select * from trains")
         data = cursor.fetchall()
         if len(data) == 0:
             return False
