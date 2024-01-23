@@ -2,6 +2,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 import mysql.connector as myc
+from datetime import datetime
 import sys
 import re
 
@@ -18,16 +19,19 @@ def connect_database():
     pas_seriya varchar(30), email varchar(50), password varchar(30))""")
     
     cursor.execute("""create table if not exists 
-    trains(train_id int primary key auto_increment, bk_name varchar(50), authour varchar(30),
-    price int)""")
+    trains(train_id int primary key auto_increment, tr_name varchar(50),
+    cur_city varchar(50), going_date date, avb_seats int, price int)""")
     
     cursor.execute("""create table if not exists
-    orders(order_id int primary key auto_increment, train_id int,user_id int)""")
+    orders(order_id int primary key auto_increment, train_id int, user_id int)""")
     con.commit()
     
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        regions = ["Nukus", "Xorazm", "Buxoro", "Navoiy", "Jizzax", "Termiz", "Toshkent",
+                   "Guliston", "Farg'ona", "Andijon", "Namangan", ]
+        self.insertAvailableTrains()
         self.setStyleSheet("background-color: #FFFFFF")
         self.setWindowTitle("Railways.uz")
         self.setWindowIcon(QIcon("icon.ico"))
@@ -41,6 +45,7 @@ class MainWindow(QMainWindow):
         self.setMaximumSize(pixmap.width(), pixmap.height())
         print(pixmap.width(), pixmap.height())
         
+        
         self.backforth = QRadioButton(self.label)
         self.backforth.move(25, 700)
         self.backforth.setStyleSheet("background-color: transparent;")
@@ -50,15 +55,27 @@ class MainWindow(QMainWindow):
         self.forth = QRadioButton(self.label)
         self.forth.move(25, 743)
         self.forth.setStyleSheet("background-color: transparent;")
-        self.forth.toggled.connect(self.forth)
+        self.forth.toggled.connect(self.forths)
         
-        cur_location = QComboBox(self)
-        cur_location.setGeometry(251, 695, 290, 76)
-        cur_location.setStyleSheet("border-radius: 5px;")
+        self.loc_error = QLabel(self)
+        self.loc_error.setGeometry(251, 645, 300, 40)
+        self.loc_error.setFont(QFont("Montserrat", 12))
+        self.loc_error.setStyleSheet("color: red; background-color: transparent;")
         
-        des_location = QComboBox(self)
-        des_location.setGeometry(541, 695, 295, 76)
-        des_location.setStyleSheet("border-radius: 5px;")
+        self.cur_location = QComboBox(self)
+        self.cur_location.setGeometry(251, 695, 290, 76)
+        self.cur_location.setStyleSheet("border-radius: 5px;")
+        self.cur_location.addItems(regions)
+        
+        self.des_location = QComboBox(self)
+        self.des_location.setGeometry(541, 695, 295, 76)
+        self.des_location.setStyleSheet("border-radius: 5px;")
+        self.des_location.addItems(regions)
+        
+        self.date_error = QLabel(self)
+        self.date_error.setGeometry(860, 645, 300, 40)
+        self.date_error.setFont(QFont("Montserrat", 12))
+        self.date_error.setStyleSheet("color: red; background-color: transparent;")
         
         self.goingdate = QLineEdit(self)
         self.goingdate.setGeometry(860, 695, 293, 76)
@@ -76,16 +93,58 @@ class MainWindow(QMainWindow):
         findTickets.setGeometry(1473, 696, 234, 64)
         findTickets.setStyleSheet("border-radius: 30px; background-color: #2E77CC;")
         findTickets.setFont(QFont("Montserrat", 12))
+        findTickets.clicked.connect(self.checkInput)
         
         
-    def forth(self):
+    def forths(self):
         self.comingdate.setPlaceholderText("")
         self.comingdate.setEnabled(False)
     
     def forthback(self):
         self.comingdate.setPlaceholderText("Coming date (2024-10-24)")
         self.comingdate.setEnabled(True)
+    
+    def insertAvailableTrains(self):
         
+        if self.isTrainsEmpty():
+            return
+        
+        query = """insert into trains (tr_name, cur_city, going_date, avb_seats, price)
+        values (%s, %s, %s, %s, %s)"""
+        values = ("Afrosiyob", "Xorazm","2024-02-11", 100, 200000)
+        cursor.execute(query, values)
+        
+        query = """insert into trains (tr_name, cur_city, going_date, avb_seats, price)
+        values (%s, %s, %s, %s, %s)"""
+        values = ("PKD-234-345", "Toshkent","2024-03-28", 80, 100000)
+        cursor.execute(query, values)
+        
+        query = """insert into trains (tr_name, cur_city, going_date, avb_seats, price)
+        values (%s, %s, %s, %s, %s)"""
+        values = ("Afrosiyob", "Buxoro", "2024-02-17", 140, 220000)
+        cursor.execute(query, values)
+        
+        query = """insert into trains (tr_name, cur_city, going_date, avb_seats, price)
+        values (%s, %s, %s, %s, %s)"""
+        values = ("QSHAK", "Nukus", "2024-05-15", 111, 111222)
+        cursor.execute(query, values)
+        
+        query = """insert into trains (tr_name, cur_city, going_date, avb_seats, price)
+        values (%s, %s, %s, %s, %s)"""
+        values = ("Afrosiyob", "Termiz", "2024-04-21", 200, 150000)
+        cursor.execute(query, values)
+        
+        query = """insert into trains (tr_name, cur_city, going_date, avb_seats, price)
+        values (%s, %s, %s, %s, %s)"""
+        values = ("KALAYDI", "Xorazm", "2024-11-11", 124, 204522)
+        cursor.execute(query, values)
+        
+        query = """insert into trains (tr_name, cur_city, going_date, avb_seats, price)
+        values (%s, %s, %s, %s, %s)"""
+        values = ("LUKSSHINE","Toshkent", "2024-3-14", 111, 777777)
+        cursor.execute(query, values)
+        
+        con.commit()
     
     
     def user_info(self):
@@ -102,8 +161,60 @@ class MainWindow(QMainWindow):
             return False
         else:
             return True
+    
+    def checkInput(self):
+        cur = self.cur_location.currentText()
+        des = self.des_location.currentText()
+        goingdate = self.goingdate.text().strip()
+        comingdate = self.comingdate.text().strip()
+        current_date = datetime.now()
+        if len(des) == 0 or len(cur) == 0:
+            self.loc_error.setText("Fields must be filled")
+            return
+        else:
+            if cur == des:
+                self.loc_error.setText("Cities have to be different")
+                return
+            else:
+                self.loc_error.setText("")
         
+        if len(goingdate) == 0 or len(comingdate) == 0 and self.backforth.isChecked():
+            self.date_error.setText("Fields must be filled")
+            return
+        if goingdate < current_date:
+            self.date_error.setText("We can not go back in time")
+            return
+        else:
+            self.date_error.setText("")
+            
+            
+        if len(goingdate) == 0 and self.forth.isChecked():
+            self.date_error.setText("Fields must be filled")
+            return
+        
+        else:
+            self.date_error.setText("")
+            
+            
+        query = f"""select tr_name, cur_city, avb_seats, price from trains
+        where cur_city = {cur}"""
+        
+        
+        data = None
+        avt = AvailableTickets(data)
+        avt.exec_()
 
+class AvailableTickets(QDialog):
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+        self.setMinimumSize(700, 700)
+        self.setMaximumSize(700, 700)
+        self.setStyleSheet("background-color: #FFFFFF")
+        self.setWindowTitle("Available Tickets")
+        self.setWindowIcon(QIcon("icon.ico"))
+        
+        
 
 class Myorders(QDialog):
     def __init__(self, data):
@@ -111,7 +222,7 @@ class Myorders(QDialog):
         self.data = data
         self.setMinimumSize(700, 700)
         self.setMaximumSize(700, 700)
-        self.setStyleSheet("background-color: #EAFFFF")
+        self.setStyleSheet("background-color: #FFFFFF")
         self.setWindowTitle("Order List")
         self.setWindowIcon(QIcon("icon.ico"))
 
